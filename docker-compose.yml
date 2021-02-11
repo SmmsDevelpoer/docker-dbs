@@ -69,11 +69,11 @@ services:
       start_period: 30s
 
   adminer:
-    image: docker.io/library/adminer:fastcgi
+    image: docker.io/library/adminer:4-standalone
     container_name: adminer
     restart: unless-stopped
     expose:
-      - 9000
+      - 8080
     networks:
       - reverse-proxy
       - mysql

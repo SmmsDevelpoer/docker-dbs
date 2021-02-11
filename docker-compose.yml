@@ -1,0 +1,77 @@
+version: '3'
+
+volumes:
+  mysql:
+    name: mysql
+    driver: local
+  pgsql:
+    name: pgsql
+    driver: local
+
+networks:
+  mysql:
+    external: true
+    driver: bridge
+  pgsql:
+    external: true
+    driver: bridge
+
+services:
+  mysql:
+    image: docker.io/library/mysql:5.7
+    container_name: mysql
+    restart: unless-stopped
+    expose:
+      - ${ENV_MYSQL_PORT}
+    environment:
+      - ENV_MYSQL_HOST=${ENV_MYSQL_HOST}
+      - ENV_MYSQL_PORT=${ENV_MYSQL_PORT}
+      - ENV_MYSQL_USERNAME=${ENV_MYSQL_USERNAME}
+      - ENV_MYSQL_PASSWORD=${ENV_MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${ENV_MYSQL_PASSWORD}
+      - MYSQL_PWD=${ENV_MYSQL_PASSWORD}
+    networks:
+      - mysql
+    volumes:
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf:ro
+      - mysql:/var/lib/mysql:rw
+    healthcheck:
+      test: [ "CMD-SHELL", "mysqladmin --host=${ENV_MYSQL_HOST} --port=${ENV_MYSQL_PORT} --user=${ENV_MYSQL_USERNAME} --silent ping || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  pgsql:
+    image: docker.io/library/postgres:13-alpine
+    container_name: pgsql
+    restart: unless-stopped
+    expose:
+      - ${ENV_PGSQL_PORT}
+    environment:
+      - ENV_PGSQL_HOST=${ENV_PGSQL_HOST}
+      - ENV_PGSQL_PORT=${ENV_PGSQL_PORT}
+      - ENV_PGSQL_USERNAME=${ENV_PGSQL_USERNAME}
+      - ENV_PGSQL_PASSWORD=${ENV_PGSQL_PASSWORD}
+      - POSTGRES_USER=${ENV_PGSQL_USERNAME}
+      - POSTGRES_PASSWORD=${ENV_PGSQL_PASSWORD}
+    networks:
+      - pgsql
+    volumes:
+      - pgsql:/var/lib/postgresql/data:rw
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready --host=${ENV_PGSQL_HOST} --port=${ENV_PGSQL_PORT} --username=${ENV_PGSQL_USERNAME}" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  adminer:
+    image: docker.io/library/adminer:fastcgi
+    container_name: adminer
+    restart: unless-stopped
+    expose:
+      - 9000
+    networks:
+      - mysql
+      - pgsql

@@ -9,6 +9,9 @@ volumes:
     driver: local
 
 networks:
+  reverse-proxy:
+    external: true
+    driver: bridge
   mysql:
     external: true
     driver: bridge
@@ -73,5 +76,6 @@ services:
     expose:
       - 9000
     networks:
+      - reverse-proxy
       - mysql
       - pgsql

@@ -32,14 +32,13 @@ services:
       - ENV_MYSQL_USERNAME=${ENV_MYSQL_USERNAME}
       - ENV_MYSQL_PASSWORD=${ENV_MYSQL_PASSWORD}
       - MYSQL_ROOT_PASSWORD=${ENV_MYSQL_PASSWORD}
-      - MYSQL_PWD=${ENV_MYSQL_PASSWORD}
     networks:
       - mysql
     volumes:
       - ./my.cnf:/etc/mysql/conf.d/my.cnf:ro
       - mysql:/var/lib/mysql:rw
     healthcheck:
-      test: [ "CMD-SHELL", "mysqladmin --host=${ENV_MYSQL_HOST} --port=${ENV_MYSQL_PORT} --user=${ENV_MYSQL_USERNAME} --silent ping || exit 1" ]
+      test: [ "CMD-SHELL", "out=$$(mysqladmin --host=${ENV_MYSQL_HOST} --port=${ENV_MYSQL_PORT} --user=${ENV_MYSQL_USERNAME} --password=${ENV_MYSQL_PASSWORD} ping 2> /dev/null); echo $$out | grep 'mysqld is alive' || { echo $$out; exit 1; }" ]
       interval: 30s
       timeout: 10s
       retries: 3
